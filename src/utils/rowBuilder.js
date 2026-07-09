@@ -19,11 +19,32 @@
  *  P  Current Value   - =J{r}*E{r}
  *  Q  Un rel P/L      - =P{r}-K{r}
  *  R  % Profit/Loss   - =IFERROR(O{r}/K{r})
- *  S  Last Modified   - YYYY-MM-DD (hidden bookkeeping column — the *date
- *                        the row was added / last touched by the app*, used
- *                        by TodaysEditsTable to surface "today's" activity
- *                        without any localStorage.)
+ *  S  Last Modified   - "YYYY-MM-DD|TAG|LINK" (hidden bookkeeping column):
+ *                        - YYYY-MM-DD: calendar date the row was added /
+ *                          last touched by the app.
+ *                        - TAG: one of
+ *                            BUY  - a genuine, standalone buy transaction
+ *                            SELL - a genuine, standalone sell transaction
+ *                                   (either a full lot closure, or the
+ *                                   "sold slice" split off during a partial
+ *                                   sell)
+ *                            ADJ  - NOT a transaction. The leftover open
+ *                                   remainder of a lot after a partial sell
+ *                                   sliced part of it off. Pure bookkeeping
+ *                                   state, must never surface as its own
+ *                                   line item on the ledger.
+ *                        - LINK: only set on a SELL row created by a partial
+ *                          sell (the "sold slice"). Points at the sheet row
+ *                          index of the lot it was cut from, so deleting
+ *                          that SELL can add the quantity straight back to
+ *                          whatever is currently in the origin row — no
+ *                          separate snapshot/cache needed, and it survives
+ *                          page reloads because it lives in the sheet.
+ *                        parseSheetDate() only reads the date prefix, so
+ *                        this stays backward compatible with any date-only
+ *                        value in older rows.
  */
+
 
 const todayIsoLocal = () => {
   const d = new Date();
@@ -48,6 +69,16 @@ export const buildTradeRowValues = (rowIndex, payload) => {
   const buyDt = toDateStr(payload.buyDate || payload.tradeDate);
   const sellDt = toDateStr(payload.sellDate || (isClosed ? payload.tradeDate : ''));
 
+  // Bookkeeping tag — defaults kept only for safety; every caller in this
+  // codebase (tradeEngine.planTrade / planRevert) now passes txTag
+  // explicitly so a row's ledger visibility is never guessed.
+  const txTag = payload.txTag || (isClosed ? 'SELL' : 'BUY');
+  const txLink =
+    payload.txLink !== undefined && payload.txLink !== null && payload.txLink !== ''
+      ? payload.txLink
+      : '';
+  const bookkeeping = `${todayIsoLocal()}|${txTag}|${txLink}`;
+
   return [
     sNo,
     `=CONCAT("NSE:",C${r})`,
@@ -67,9 +98,10 @@ export const buildTradeRowValues = (rowIndex, payload) => {
     isClosed ? '' : `=J${r}*E${r}`,
     isClosed ? '' : `=P${r}-K${r}`,
     `=IFERROR(O${r}/K${r})`,
-    // Column S — hidden last-modified stamp. Always overwritten to *today's*
-    // local calendar date whenever the row is written or updated, so the
-    // "Today's Transactions" view can filter directly off the sheet.
-    todayIsoLocal(),
+    // Column S — hidden bookkeeping stamp "date|tag|link". Always
+    // overwritten whenever the row is written or updated, so the
+    // "Today's Transactions" ledger can filter/classify directly off the
+    // sheet (no localStorage, survives reloads).
+    bookkeeping,
   ];
 };

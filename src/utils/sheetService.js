@@ -1,4 +1,5 @@
 import { buildTradeRowValues } from './rowBuilder';
+import { parseSheetDate } from './dateUtils';
 
 const sanitizeNumber = (value) => {
   if (
@@ -14,10 +15,23 @@ const sanitizeNumber = (value) => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-// Column S (0-indexed 18) holds the hidden last-modified stamp written by
-// rowBuilder. Older rows may not have it — callers treat missing values as
-// "not modified today" so they won't appear in the today's-transactions view.
+// Column S (0-indexed 18) holds the hidden bookkeeping stamp written by
+// rowBuilder: "YYYY-MM-DD|TAG|LINK". Older rows may only have a bare date
+// (or nothing) — callers treat those as "not modified today" so they won't
+// appear in the today's-transactions view, and infer a tag from the row's
+// own open/closed state so nothing crashes on legacy data.
 const LAST_MODIFIED_COL_INDEX = 18;
+
+const parseBookkeeping = (rawValue, isClosed) => {
+  if (rawValue === null || rawValue === undefined || rawValue === '') {
+    return { lastModified: null, txTag: isClosed ? 'SELL' : 'BUY', txLink: null };
+  }
+  const parts = String(rawValue).split('|');
+  const lastModified = parseSheetDate(parts[0]);
+  const txTag = parts[1] || (isClosed ? 'SELL' : 'BUY');
+  const txLink = parts[2] ? Number(parts[2]) : null;
+  return { lastModified, txTag, txLink: Number.isNaN(txLink) ? null : txLink };
+};
 
 /**
  * Fetch a sub-sheet and normalise into ledger rows.
@@ -109,21 +123,25 @@ export const fetchAndSanitizeSheet = async (
       unrealizedPL = currentValue - buyValue;
     }
 
+    // Sheets renders date cells per-column using whatever number format is
+    // actually applied there (dd mmm yy / d mmm yy / d mmmm yy across the
+    // real journal tabs), so the raw cell value is display text like
+    // "19 Jun 26", not ISO. parseSheetDate normalises that into the
+    // "YYYY-MM-DD" form the rest of the app expects.
     const rawBuyDt = idxBuyDt !== -1 ? row[idxBuyDt] : null;
-    const fallbackDateStr = rawBuyDt
-      ? String(rawBuyDt).split(' ')[0]
-      : new Date().toISOString().split('T')[0];
+    const parsedBuyDt = parseSheetDate(rawBuyDt);
+    const fallbackDateStr = parsedBuyDt || new Date().toISOString().split('T')[0];
 
-    const rawSellDt = idxSellDt !== -1 && row[idxSellDt] ? String(row[idxSellDt]).split(' ')[0] : null;
+    const rawSellDt = idxSellDt !== -1 ? row[idxSellDt] : null;
+    const rawSellDtStr = parseSheetDate(rawSellDt);
 
-    // Hidden bookkeeping column S — the calendar date this row was created
-    // or last updated by the app. Missing = legacy row, so we return null
-    // (not fallbackDateStr) to keep the today-filter honest.
+    // Hidden bookkeeping column S — date this row was created/last touched
+    // by the app, plus a transaction tag (BUY / SELL / ADJ) and an optional
+    // link to a sibling row (see rowBuilder.js). Missing = legacy row, so
+    // lastModified stays null (not fallbackDateStr) to keep the
+    // today-filter honest, and the tag is inferred from open/closed state.
     const rawLastModified = row[LAST_MODIFIED_COL_INDEX];
-    const lastModified =
-      rawLastModified !== undefined && rawLastModified !== null && rawLastModified !== ''
-        ? String(rawLastModified).split(' ')[0]
-        : null;
+    const { lastModified, txTag, txLink } = parseBookkeeping(rawLastModified, isClosed);
 
     cleanLedger.push({
       id: `${accountType}_${symbol}_${i}`,
@@ -137,8 +155,8 @@ export const fetchAndSanitizeSheet = async (
       buyValue,
       livePrice: livePrice > 0 ? livePrice : buyPrice,
       currentValue,
-      buyDate: rawBuyDt ? String(rawBuyDt).split(' ')[0] : null,
-      sellDate: rawSellDt,
+      buyDate: parsedBuyDt,
+      sellDate: rawSellDtStr,
       sellPrice,
       realizedPL,
       unrealizedPL,
@@ -148,6 +166,8 @@ export const fetchAndSanitizeSheet = async (
           : 'Unassigned',
       tradeDate: fallbackDateStr,
       lastModified,
+      txTag,
+      txLink,
     });
   }
 

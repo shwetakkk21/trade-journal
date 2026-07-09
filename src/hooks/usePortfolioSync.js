@@ -17,7 +17,7 @@ export function usePortfolioSync(user) {
   const [syncing, setSyncing] = useState(false);
 
   const executeDataSync = useCallback(async (sheets, token) => {
-    if (!sheets || sheets.length === 0 || !token) return;
+    if (!sheets || sheets.length === 0 || !token) return null;
     setSyncing(true);
     try {
       const ledger = [];
@@ -31,8 +31,15 @@ export function usePortfolioSync(user) {
         ledger.push(...rows);
       }
       setPortfolio(ledger);
+      // Returned so callers that need the freshly-synced data *immediately*
+      // (e.g. edit-a-transaction, which reverts then re-plans a trade in
+      // the same async flow) don't have to wait on a React re-render to
+      // see it — setPortfolio() won't be reflected in this closure's
+      // `portfolio` variable until the next render.
+      return ledger;
     } catch (err) {
       console.error('Data pipeline sync aborted:', err);
+      return null;
     } finally {
       setSyncing(false);
     }

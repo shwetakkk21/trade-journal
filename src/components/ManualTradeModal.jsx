@@ -47,10 +47,20 @@ export function ManualTradeModal({
 
   const cleanSymbol = symbol.toUpperCase().trim();
   const parsedQty = parseFloat(qty) || 0;
-  const openQty =
+  const rawOpenQty =
     tradeType === 'SELL' && cleanSymbol && demat
       ? availableQty(portfolio || [], cleanSymbol, demat)
       : null;
+  // When editing an existing SELL, its own quantity is currently "closed"
+  // (not counted as available) — but committing the edit reverts the
+  // original sell first, so that quantity becomes sellable again. Without
+  // this, editing just the price/date of an existing sell (leaving qty
+  // unchanged) would be incorrectly blocked as "not enough shares available".
+  const isEditingSameSell = !!editTx && editTx.type === 'SELL';
+  const openQty =
+    rawOpenQty === null
+      ? null
+      : rawOpenQty + (isEditingSameSell ? Number(editTx.qty) || 0 : 0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
