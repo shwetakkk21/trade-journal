@@ -73,7 +73,7 @@ export function NotificationModal({ isOpen, onClose, onConfirm, title, message, 
               onClick={onClose}
               className="px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-2 rounded-lg border border-slate-700 transition-all font-sans"
             >
-              Acknowledge Guardrail
+              Accept
             </button>
           )}
         </div>

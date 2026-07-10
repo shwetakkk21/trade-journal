@@ -19,9 +19,6 @@ export function ProcessingOverlay({
       ? 'Writing your trade to the Google Sheet'
       : 'Refreshing latest rows from Google Sheets');
 
-  const themeRing = isTransaction
-    ? 'border-amber-700/60 shadow-amber-900/40'
-    : 'border-teal-700/60 shadow-teal-900/40';
 
   const iconTint = isTransaction ? 'text-amber-400' : 'text-teal-400';
   const labelTint = isTransaction ? 'text-amber-100' : 'text-slate-100';
@@ -30,7 +27,7 @@ export function ProcessingOverlay({
   return (
     <div className="fixed inset-0 z-[70] bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center">
       <div
-        className={`bg-slate-900 border ${themeRing} rounded-2xl px-10 py-7 shadow-2xl flex flex-col items-center gap-3 min-w-[280px]`}
+        className={`bg-slate-900 border border-slate-800 rounded-2xl px-10 py-7 shadow-2xl flex flex-col items-center gap-3 min-w-[280px]`}
       >
         {isTransaction ? (
           <div className="relative">

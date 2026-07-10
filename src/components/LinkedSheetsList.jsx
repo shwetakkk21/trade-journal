@@ -3,7 +3,7 @@ import { Layers, Trash2 } from 'lucide-react';
 function EmptyState() {
   return (
     <div className="p-8 text-center text-slate-500 text-xs italic">
-      No workbook selected. Select a workbook directory above.
+      No sheet selected. Select a sheet above.
     </div>
   );
 }
@@ -14,11 +14,11 @@ function SheetRow({ sheet, onDelete, disabled }) {
       <div>
         <div className="flex items-center gap-2">
           <span className="bg-teal-950 border border-teal-800 text-teal-400 text-[10px] font-bold uppercase px-2 py-0.5 rounded font-mono">
-            Subsheet Linked
+            Tab Linked
           </span>
           <h4 className="text-xs font-bold text-slate-200">
-            Workspace Name:{' '}
-            <span className="text-teal-400 font-mono">"{sheet.subsheetName}"</span>
+            Title:{' '}
+            <span className="text-teal-400 font-mono">{sheet.subsheetName}</span>
           </h4>
         </div>
       </div>

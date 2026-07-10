@@ -12,6 +12,7 @@ export function DashboardView({
   onConnect,
   onSync,
   onOpenManualTrade,
+  onOpenCsvImport,
   dematOptions,
   strategyOptions,
   selectedDemat,
@@ -39,6 +40,7 @@ export function DashboardView({
           onConnect={onConnect}
           onSync={onSync}
           onOpenManualTrade={onOpenManualTrade}
+          onOpenCsvImport={onOpenCsvImport}
         />
 
         <div className="lg:col-span-2 bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl flex flex-col justify-between">
@@ -72,7 +74,10 @@ export function DashboardView({
         </div>
       </div>
 
-      <AnalyticsCharts chartData={consolidatedAnalysis.chartData} />
+      <AnalyticsCharts
+        chartData={consolidatedAnalysis.chartData}
+        trendData={consolidatedAnalysis.trendData}
+      />
       <TodaysEditsTable
         transactions={sessionTransactions}
         onEdit={onEditTransaction}

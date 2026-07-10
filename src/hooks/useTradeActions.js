@@ -4,7 +4,7 @@ import {
   updateTradeRow,
   clearTradeRow,
 } from '../utils/sheetService';
-import { planTrade, planRevert } from '../utils/tradeEngine';
+import { planTrade, planRevert, reflectOpInPortfolio } from '../utils/tradeEngine';
 import { getTodayString } from '../utils/dateUtils';
 
 const rowKey = (p) => `${p.spreadsheetId}::${p.subsheetName}::${p.sheetRowIndex}`;
@@ -251,11 +251,134 @@ export function useTradeActions({
     [portfolio, runOps, linkedSheets, googleToken, executeDataSync, notify, setSyncing, setSubmittingSafe, submitTrade, findBlockingSell]
   );
 
+  // Replays a batch of pre-grouped CSV orders (see utils/csvImport.js)
+  // against a single destination tab, in the order given (caller sorts by
+  // execution time for true FIFO). Each order is planned + executed
+  // one-by-one against a locally-maintained ledger copy so a sell can
+  // correctly match against a buy earlier in the *same* batch without
+  // needing a full re-sync between every order. An order that fails to plan
+  // (e.g. a sell with no matching open shares yet — often a real data gap,
+  // like a position opened before the CSV's date range) is skipped, not
+  // fatal: the rest of the batch keeps going, and every skipped order is
+  // collected and reported together at the end.
+  const importCsvBatch = useCallback(
+    async (demat, orders) => {
+      const channel = resolveChannel(demat);
+      if (!channel) {
+        notify('No Linked Sheet', 'Link a Google Sheet in Settings first.', 'WARNING');
+        return { ok: false, imported: 0, total: orders.length, failures: [] };
+      }
+
+      let virtualPortfolio = portfolio.slice();
+      let imported = 0;
+      const failures = [];
+      let fatalError = null;
+
+      try {
+        setSubmittingSafe(true);
+        for (const order of orders) {
+          const request = {
+            type: order.type,
+            symbol: order.symbol,
+            demat,
+            strategy: 'Unassigned',
+            qty: order.qty,
+            price: order.price,
+            date: order.date,
+            spreadsheetId: channel.spreadsheetId,
+            subsheetName: channel.subsheetName,
+          };
+
+          const { ops, error } = planTrade(virtualPortfolio, request);
+          if (error) {
+            failures.push({
+              orderId: order.orderId,
+              type: order.type,
+              symbol: order.symbol,
+              qty: order.qty,
+              reason: error,
+            });
+            continue;
+          }
+
+          try {
+            for (const op of ops) {
+              if (op.kind === 'append') {
+                const res = await appendTradeRow(op.spreadsheetId, op.subsheetName, op.payload, googleToken);
+                virtualPortfolio = reflectOpInPortfolio(virtualPortfolio, op, demat, res.appendedRow);
+              } else if (op.kind === 'update') {
+                await updateTradeRow(op.spreadsheetId, op.subsheetName, op.rowIndex, op.payload, googleToken);
+                virtualPortfolio = reflectOpInPortfolio(virtualPortfolio, op, demat);
+              } else if (op.kind === 'clear') {
+                await clearTradeRow(op.spreadsheetId, op.subsheetName, op.rowIndex, googleToken);
+              }
+            }
+            imported += 1;
+          } catch (err) {
+            // A real write/network failure (not a planning error) — the
+            // sheet state and our local plan may now disagree, so stop
+            // rather than keep planning against a ledger that might be stale.
+            fatalError = err.message;
+            break;
+          }
+        }
+      } finally {
+        setSubmittingSafe(false);
+      }
+
+      if (imported > 0) {
+        setSyncing(true);
+        await executeDataSync(linkedSheets, googleToken);
+        setSyncing(false);
+      }
+
+      const FAILURE_DISPLAY_CAP = 15;
+      const failureLines = failures
+        .slice(0, FAILURE_DISPLAY_CAP)
+        .map((f) => `• ${f.type} ${f.qty} ${f.symbol} (order ${f.orderId}): ${f.reason}`)
+        .join('\n')
+        .concat(
+          failures.length > FAILURE_DISPLAY_CAP
+            ? `\n… and ${failures.length - FAILURE_DISPLAY_CAP} more`
+            : ''
+        );
+
+      if (fatalError) {
+        notify(
+          'Import Stopped (Write Error)',
+          `${imported} of ${orders.length} order(s) imported to ${channel.subsheetName} before a write failed.\n\nReason: ${fatalError}${
+            failureLines ? `\n\nAlso skipped earlier:\n${failureLines}` : ''
+          }`,
+          'WARNING'
+        );
+        return { ok: imported > 0, imported, total: orders.length, failures, fatalError };
+      }
+
+      if (failures.length > 0) {
+        notify(
+          'CSV Import Finished With Skips',
+          `${imported} of ${orders.length} order(s) imported to ${channel.subsheetName}.\n\n${failures.length} order(s) skipped:\n${failureLines}`,
+          'WARNING'
+        );
+        return { ok: imported > 0, imported, total: orders.length, failures };
+      }
+
+      notify(
+        'CSV Import Complete',
+        `${imported} order(s) imported to ${channel.subsheetName} (fills combined by order id, weighted-average price, executed FIFO).`,
+        'SUCCESS'
+      );
+      return { ok: true, imported, total: orders.length, failures: [] };
+    },
+    [portfolio, googleToken, linkedSheets, resolveChannel, executeDataSync, notify, setSyncing, setSubmittingSafe]
+  );
+
   return {
     sessionTransactions,
     submitTrade,
     deleteTransaction,
     updateTransaction,
     findBlockingSell,
+    importCsvBatch,
   };
 }

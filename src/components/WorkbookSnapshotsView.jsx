@@ -49,14 +49,14 @@ export function WorkbookSnapshotsView({ linkedSheets, googleToken }) {
           className="bg-slate-950 hover:bg-slate-800 text-teal-400 px-3 py-1.5 rounded-lg border border-slate-800 text-xs flex items-center gap-2 font-medium disabled:opacity-50"
         >
           <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-          Refresh Live Cells
+          Refresh
         </button>
       </div>
 
       {error && <div className="p-4 bg-rose-950/40 border border-rose-900 rounded-lg text-xs text-rose-400 font-mono">{error}</div>}
 
       {loading ? (
-        <div className="p-20 text-center text-slate-500 text-xs italic">Streaming direct grid matrices from Google...</div>
+        <div className="p-20 text-center text-slate-500 text-xs italic">Loading your Google Sheet snapshot...</div>
       ) : (
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto overflow-y-auto max-h-[600px]">

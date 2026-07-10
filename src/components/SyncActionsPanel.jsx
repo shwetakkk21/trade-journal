@@ -7,6 +7,7 @@ export function SyncActionsPanel({
   onConnect,
   onSync,
   onOpenManualTrade,
+  onOpenCsvImport,
 }) {
   return (
     <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-xl flex flex-col justify-between min-h-[160px]">
@@ -45,6 +46,13 @@ export function SyncActionsPanel({
               className="bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg transition-all"
             >
               Manual Entry Execution
+            </button>
+            <button
+              onClick={onOpenCsvImport}
+              disabled={!hasLinkedSheets}
+              className="bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg transition-all"
+            >
+              Import CSV
             </button>
           </>
         )}

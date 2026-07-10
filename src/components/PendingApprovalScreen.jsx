@@ -21,8 +21,8 @@ export function PendingApprovalScreen({ approvalStatus, onLogout }) {
         
         <p className="text-xs text-slate-400 mt-4 leading-relaxed font-mono">
           {isRejected 
-            ? 'Your registration profile has been rejected by an administrator. Reach out to support to appeal this action.'
-            : 'Your trading workspace profile connection is currently under review. The dashboard will automatically unlock the second an administrator updates your access configuration parameters.'
+            ? 'Your profile has been rejected by an administrator. Reach out to support to appeal this action.'
+            : 'Your profile is currently under review. The dashboard will automatically unlock the second an administrator approves your request.'
           }
         </p>
 

@@ -186,6 +186,65 @@ export const planTrade = (portfolio, request) => {
 };
 
 /**
+ * Mirrors the effect of an *already-executed* op (see planTrade above) onto
+ * an in-memory copy of the ledger. Used by batch CSV import: each grouped
+ * order is planned and executed one at a time against the real sheet, but
+ * doing a full re-sync between every single order would be slow and is
+ * unnecessary — this lets the next order's FIFO lot-matching see the effect
+ * of prior orders in the same batch immediately, purely in memory.
+ *
+ * `appendedRow` is the real row index Sheets assigned (only known after the
+ * append actually happens — planTrade never knows this in advance), and
+ * `demat` is the account label the batch is targeting (portfolio entries
+ * are filtered by this field elsewhere, see openLotsForSymbol above).
+ *
+ * 'clear' ops are never emitted by planTrade (only planRevert), so there's
+ * nothing to reflect for that kind here.
+ */
+export const reflectOpInPortfolio = (virtualPortfolio, op, demat, appendedRow) => {
+  if (op.kind === 'append') {
+    return [
+      ...virtualPortfolio,
+      {
+        spreadsheetId: op.spreadsheetId,
+        subsheetName: op.subsheetName,
+        sheetRowIndex: appendedRow,
+        sheetName: demat,
+        symbol: op.payload.symbol,
+        qty: Number(op.payload.qty),
+        buyPrice: Number(op.payload.buyPrice),
+        tradeDate: op.payload.tradeDate,
+        sellDate: op.payload.sellDate || '',
+        sellPrice: op.payload.sellPrice || '',
+      },
+    ];
+  }
+
+  if (op.kind === 'update') {
+    return virtualPortfolio.map((t) => {
+      if (
+        t.spreadsheetId !== op.spreadsheetId ||
+        t.subsheetName !== op.subsheetName ||
+        t.sheetRowIndex !== op.rowIndex
+      ) {
+        return t;
+      }
+      return {
+        ...t,
+        symbol: op.payload.symbol,
+        qty: Number(op.payload.qty),
+        buyPrice: Number(op.payload.buyPrice),
+        tradeDate: op.payload.tradeDate,
+        sellDate: op.payload.sellDate || '',
+        sellPrice: op.payload.sellPrice || '',
+      };
+    });
+  }
+
+  return virtualPortfolio;
+};
+
+/**
  * Given a synthesized ledger transaction (see useTradeActions.js —
  * carries type, sheetRowIndex, buyPrice, buyDate, qty, link, etc.) and the
  * current portfolio, produce the ops that undo it. No snapshot/cache is

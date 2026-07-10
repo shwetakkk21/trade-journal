@@ -42,7 +42,6 @@ export function ManualTradeModal({
       setCustomDate(getTodayString());
     }
     setInlineError('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editTx, isOpen]);
 
   const cleanSymbol = symbol.toUpperCase().trim();

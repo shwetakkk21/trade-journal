@@ -44,7 +44,7 @@ export function MetricCards({ historicalStats, liveHoldingsStats }) {
       {/* Historical Track Row */}
       <div>
         <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1.5">
-          Closed Performance Summary
+          Closed Trades Summary
         </span>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {performanceItems.map((item, index) => (
@@ -52,10 +52,10 @@ export function MetricCards({ historicalStats, liveHoldingsStats }) {
               key={index}
               className="bg-slate-950 border border-slate-800 p-2 rounded-lg text-center shadow-inner"
             >
-              <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider block">
+              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
                 {item.label}
               </span>
-              <span className={`text-xs font-bold font-mono mt-1 block ${item.colorClass}`}>
+              <span className={`text-sm font-bold font-mono mt-1 block ${item.colorClass}`}>
                 {item.value}
               </span>
             </div>
@@ -66,7 +66,7 @@ export function MetricCards({ historicalStats, liveHoldingsStats }) {
       {/* Persistent Live Holding Row */}
       <div>
         <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1.5">
-          Open Trades (All-Time Cumulative)
+          Open Trades Summary (All-Time Cumulative)
         </span>
         <div className="grid grid-cols-2 gap-2.5">
           {openExposureItems.map((item, index) => (
@@ -74,10 +74,10 @@ export function MetricCards({ historicalStats, liveHoldingsStats }) {
               key={index}
               className="bg-slate-950/60 border border-slate-800/80 p-2.5 rounded-lg text-center shadow-md"
             >
-              <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider block">
+              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
                 {item.label}
               </span>
-              <span className={`text-xs font-bold font-mono mt-1 block ${item.colorClass}`}>
+              <span className={`text-sm font-bold font-mono mt-1 block ${item.colorClass}`}>
                 {item.value}
               </span>
             </div>

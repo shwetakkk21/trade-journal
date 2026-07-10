@@ -18,6 +18,7 @@ import { SettingsView } from './components/SettingsView';
 import { WorkbookSnapshotsView } from './components/WorkbookSnapshotsView';
 import { DashboardView } from './components/DashboardView';
 import { ManualTradeModal } from './components/ManualTradeModal';
+import { CsvImportModal } from './components/CsvImportModal';
 import { NotificationModal } from './components/NotificationModal';
 import { ProcessingOverlay } from './components/ProcessingOverlay';
 
@@ -46,6 +47,7 @@ function App() {
     deleteTransaction,
     updateTransaction,
     findBlockingSell,
+    importCsvBatch,
   } = useTradeActions({
     googleToken,
     linkedSheets,
@@ -67,6 +69,11 @@ function App() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTx, setEditingTx] = useState(null);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+
+  // Every linked tab (not just ones that already have portfolio rows), so a
+  // freshly-linked-but-empty demat still shows up as an import destination.
+  const csvDematOptions = [...new Set(linkedSheets.map((s) => s.accountType))];
 
   const {
     dematOptions,
@@ -277,6 +284,7 @@ function App() {
             onConnect={handleGoogleLogin}
             onSync={triggerLiveSheetsSync}
             onOpenManualTrade={() => { setEditingTx(null); setIsModalOpen(true); }}
+            onOpenCsvImport={() => setIsCsvModalOpen(true)}
             dematOptions={dematOptions}
             strategyOptions={strategyOptions}
             selectedDemat={selectedDemat}
@@ -304,6 +312,12 @@ function App() {
         dematOptions={dematOptions}
         editTx={editingTx}
         portfolio={portfolio}
+      />
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+        dematOptions={csvDematOptions}
+        onExecute={importCsvBatch}
       />
       <NotificationModal
         isOpen={alertConfig.isOpen}

@@ -1,4 +1,4 @@
-import { LayoutGrid, Settings, LogOut, User, ShieldAlert } from 'lucide-react';
+import { LayoutGrid, Settings, LogOut, User, Users } from 'lucide-react';
 
 const tabButtonBase =
   'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all';
@@ -43,11 +43,11 @@ export function AppHeader({ user, isAdmin, activeTab: tab, onTabChange, onLogout
             onClick={() => onTabChange('admin')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs uppercase tracking-wider font-bold transition-all duration-200 ${
               tab === 'admin'
-                ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-black shadow-lg shadow-teal-500/20 scale-105'
+                ? 'bg-teal-500 text-slate-950 font-black'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
             }`}
           >
-            <ShieldAlert className="w-4 h-4" /> Admin Panel
+            <Users className="w-4 h-4" /> Admin Panel
           </button>
         )}
         <button
