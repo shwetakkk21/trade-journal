@@ -36,6 +36,19 @@ const parseBookkeeping = (rawValue, isClosed) => {
 /**
  * Fetch a sub-sheet and normalise into ledger rows.
  */
+
+export const fetchAbsoluteRawSheetData = async (spreadsheetId, subsheetName, accessToken) => {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${subsheetName}!A1:Z1000`;
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch raw sheet data: ${response.statusText}`);
+  }
+  const data = await response.json();
+  return data.values || []; // Returns the raw array of arrays (rows and columns)
+};
+
 export const fetchAndSanitizeSheet = async (
   spreadsheetId,
   subsheetName,

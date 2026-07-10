@@ -15,6 +15,7 @@ import { PendingApprovalScreen } from './components/PendingApprovalScreen';
 import { AppHeader } from './components/AppHeader';
 import { AdminView } from './components/AdminView';
 import { SettingsView } from './components/SettingsView';
+import { WorkbookSnapshotsView } from './components/WorkbookSnapshotsView';
 import { DashboardView } from './components/DashboardView';
 import { ManualTradeModal } from './components/ManualTradeModal';
 import { NotificationModal } from './components/NotificationModal';
@@ -263,6 +264,10 @@ function App() {
         )}
 
         {activeTab === 'admin' && isAdmin && <AdminView />}
+
+        {activeTab === 'snapshots' && (
+          <WorkbookSnapshotsView linkedSheets={linkedSheets} googleToken={googleToken} />
+        )}
 
         {activeTab === 'dashboard' && (
           <DashboardView
