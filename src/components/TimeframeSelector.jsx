@@ -1,4 +1,5 @@
 import React from 'react';
+import { getTodayString } from '../utils/dateUtils';
 import { CalendarDays, XCircle } from 'lucide-react';
 
 export function TimeframeSelector({
@@ -19,6 +20,8 @@ export function TimeframeSelector({
     { id: 'CUSTOM', label: 'Custom Period' },
     { id: 'ALL', label: 'All-Time Cumulative' },
   ];
+  
+  const todayStr = getTodayString();
 
   return (
     <div className="space-y-3 mb-4">
@@ -47,7 +50,8 @@ export function TimeframeSelector({
             <span className="text-[9px] font-mono uppercase text-slate-500 pl-1">From</span>
             <input
               type="date"
-              value={customStartDate}
+              max={todayStr}
+              value={customStartDate || todayStr} 
               onChange={(e) => setCustomStartDate(e.target.value)}
               className="bg-slate-900 border border-slate-800 text-xs rounded-lg p-1 text-slate-200 font-mono focus:outline-none focus:border-teal-500"
             />
@@ -56,19 +60,23 @@ export function TimeframeSelector({
             <span className="text-[9px] font-mono uppercase text-slate-500">To</span>
             <input
               type="date"
-              value={customEndDate}
+              min={customStartDate || todayStr} 
+              max={todayStr}
+              value={customEndDate || todayStr} // 🔥 FIXED: Default binding fallback context
               onChange={(e) => setCustomEndDate(e.target.value)}
               className="bg-slate-900 border border-slate-800 text-xs rounded-lg p-1 text-slate-200 font-mono focus:outline-none focus:border-teal-500"
             />
           </div>
-          {(customStartDate || customEndDate) && (
+         
+          {(customStartDate !== todayStr || customEndDate !== todayStr) && (
             <button
               type="button"
               onClick={() => {
-                setCustomStartDate('');
-                setCustomEndDate('');
+                setCustomStartDate(todayStr);
+                setCustomEndDate(todayStr);
               }}
               className="text-rose-400 hover:text-rose-300 p-1 transition-all"
+              title="Reset Custom Range Filters"
             >
               <XCircle className="w-4 h-4" />
             </button>

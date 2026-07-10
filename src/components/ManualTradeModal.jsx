@@ -161,6 +161,7 @@ export function ManualTradeModal({
               <input
                 required
                 type="date"
+                max={getTodayString()}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-teal-500 font-mono"
                 value={customDate}
                 onChange={(e) => setCustomDate(e.target.value)}

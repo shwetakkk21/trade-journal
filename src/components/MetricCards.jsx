@@ -1,7 +1,7 @@
 import React from 'react';
 
 export function MetricCards({ historicalStats, liveHoldingsStats }) {
-  // Zone A: Timeframe-Bound Historical Realized Trading Metrics
+  // Historical Realized Trading Metrics
   const performanceItems = [
     {
       label: 'Realized P/L',
@@ -25,7 +25,7 @@ export function MetricCards({ historicalStats, liveHoldingsStats }) {
     },
   ];
 
-  // Zone B: Cumulative Live Open Portfolio Risk (Ignores Timeframe, Syncs with Demat Filters)
+  // Cumulative Open Portfolio Risk 
   const openExposureItems = [
     {
       label: 'Unrealized P/L',
