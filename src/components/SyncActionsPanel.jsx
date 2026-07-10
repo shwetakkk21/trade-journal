@@ -44,7 +44,7 @@ export function SyncActionsPanel({
               disabled={!hasLinkedSheets}
               className="bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg transition-all"
             >
-              Append Row To Sheet
+              Manual Entry Execution
             </button>
           </>
         )}

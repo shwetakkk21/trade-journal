@@ -30,10 +30,10 @@ export function AppHeader({ user, isAdmin, activeTab: tab, onTabChange, onLogout
 
       <div className="flex gap-2 w-full sm:w-auto justify-end">
         <button onClick={() => onTabChange('dashboard')} className={cls('dashboard')}>
-          <LayoutGrid className="w-3.5 h-3.5" /> Core Dashboard
+          <LayoutGrid className="w-3.5 h-3.5" /> Dashboard
         </button>
         <button onClick={() => onTabChange('settings')} className={cls('settings')}>
-          <Settings className="w-3.5 h-3.5" /> Linked Sheets Setup
+          <Settings className="w-3.5 h-3.5" /> Linked Sheets
         </button>
         {isAdmin && (
           <button
