@@ -28,12 +28,12 @@ const isOpen = (t) => !(Number(t.sellPrice || 0) > 0 || t.sellDate);
 const openLotsForSymbol = (portfolio, symbol, demat) =>
   portfolio
     .filter((t) => t.symbol === symbol && t.sheetName === demat && isOpen(t))
-    // LIFO: latest buy first, tiebreak by sheet row (later row = later entry)
+    // FIFO: first buy first, tiebreak by sheet row (later row = later entry)
     .sort((a, b) => {
       const dA = new Date(a.tradeDate).getTime() || 0;
       const dB = new Date(b.tradeDate).getTime() || 0;
-      if (dB !== dA) return dB - dA;
-      return (b.sheetRowIndex || 0) - (a.sheetRowIndex || 0);
+      if (dB !== dA) return dA - dB;
+      return (a.sheetRowIndex || 0) - (b.sheetRowIndex || 0);
     });
 
 export const availableQty = (portfolio, symbol, demat) =>
