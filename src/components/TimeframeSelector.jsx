@@ -62,7 +62,7 @@ export function TimeframeSelector({
               type="date"
               min={customStartDate || todayStr} 
               max={todayStr}
-              value={customEndDate || todayStr} // 🔥 FIXED: Default binding fallback context
+              value={customEndDate || todayStr} 
               onChange={(e) => setCustomEndDate(e.target.value)}
               className="bg-slate-900 border border-slate-800 text-xs rounded-lg p-1 text-slate-200 font-mono focus:outline-none focus:border-teal-500"
             />
