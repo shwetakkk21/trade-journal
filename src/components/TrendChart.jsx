@@ -20,7 +20,7 @@ const METRICS = [
     dataKey: 'pl',
     color: POSITIVE_COLOR,
     divergent: true, 
-    format: (v) => `₹${v.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+    format: (v) => `₹${Number(v).toFixed(2)}`,
   },
   {
     id: 'pctPl',
@@ -28,15 +28,7 @@ const METRICS = [
     dataKey: 'pctPl',
     color: POSITIVE_COLOR,
     divergent: true,
-    format: (v) => `${v.toFixed(2)}%`,
-  },
-  {
-    id: 'riskReward',
-    label: 'RR Ratio',
-    dataKey: 'riskReward',
-    color: '#a78bfa',
-    divergent: false, 
-    format: (v) => `${v.toFixed(2)}x`,
+    format: (v) => `${Number(v).toFixed(2)}%`,
   },
   {
     id: 'winRatio',
@@ -44,8 +36,16 @@ const METRICS = [
     dataKey: 'winRatio',
     color: '#fbbf24',
     divergent: false, 
-    format: (v) => `${v.toFixed(1)}%`,
+    format: (v) => `${Number(v).toFixed(1)}%`,
   },
+  {
+    id: 'riskReward',
+    label: 'RR Ratio',
+    dataKey: 'riskReward',
+    color: '#a78bfa',
+    divergent: false, 
+    format: (v) => `${Number(v).toFixed(2)}x`,
+  }
 ];
 
 export function TrendChart({ trendData }) {
@@ -139,7 +139,7 @@ export function TrendChart({ trendData }) {
               )}
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
               <XAxis dataKey="label" stroke="#94a3b8" fontSize={11} tickLine={false} minTickGap={20} />
-              <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} domain={yDomain} />
+              <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} domain={yDomain} tickFormatter={(v)=>Number(v).toFixed(2)} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#0f172a',
