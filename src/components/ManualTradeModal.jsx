@@ -77,7 +77,7 @@ export function ManualTradeModal({
       type: tradeType,
       symbol: cleanSymbol,
       demat,
-      strategy: strategy.trim(),
+      strategy: tradeType === 'BUY' ? strategy.trim() : '',
       qty: parsedQty,
       price: parseFloat(price),
       date: customDate,
@@ -114,7 +114,7 @@ export function ManualTradeModal({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className={`grid gap-4 ${tradeType === 'BUY' ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <div>
               <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Stock Symbol</label>
               <input
@@ -144,15 +144,17 @@ export function ManualTradeModal({
                 )}
               </select>
             </div>
-            <div>
-              <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Strategy</label>
-              <input
-                type="text"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500"
-                value={strategy}
-                onChange={(e) => setStrategy(e.target.value)}
-              />
-            </div>
+            {tradeType === 'BUY' && (
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Strategy</label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500"
+                  value={strategy}
+                  onChange={(e) => setStrategy(e.target.value)}
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4 bg-slate-950/40 p-4 border border-slate-800/60 rounded-xl">

@@ -190,12 +190,13 @@ export const fetchAndSanitizeSheet = async (
 /**
  * Locate the next truly-empty data row (data begins at row 3).
  * Column B is a pure formula echo of C and is skipped when scanning.
- * Column S (last-modified) is also written by the app but is included in the
- * scan so a row that only carries the timestamp still counts as occupied.
+ * Columns S (last-modified) and T (strategy) are also written by the app but
+ * are included in the scan so a row that only carries those still counts as
+ * occupied.
  */
 const findNextEmptyRow = async (spreadsheetId, subsheetName, accessToken) => {
   const encoded = encodeURIComponent(subsheetName);
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encoded}!A3:S?majorDimension=ROWS`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encoded}!A3:T?majorDimension=ROWS`;
 
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -228,7 +229,7 @@ const findNextEmptyRow = async (spreadsheetId, subsheetName, accessToken) => {
 
 const putRow = async (spreadsheetId, subsheetName, rowIndex, valuesArray, accessToken) => {
   const encoded = encodeURIComponent(subsheetName);
-  const range = `${encoded}!A${rowIndex}:S${rowIndex}`;
+  const range = `${encoded}!A${rowIndex}:T${rowIndex}`;
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`;
 
   const response = await fetch(url, {
@@ -238,7 +239,7 @@ const putRow = async (spreadsheetId, subsheetName, rowIndex, valuesArray, access
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      range: `${subsheetName}!A${rowIndex}:S${rowIndex}`,
+      range: `${subsheetName}!A${rowIndex}:T${rowIndex}`,
       majorDimension: 'ROWS',
       values: [valuesArray],
     }),
@@ -270,10 +271,10 @@ export const updateTradeRow = async (
   return putRow(spreadsheetId, subsheetName, rowIndex, values, accessToken);
 };
 
-/** Clear a row's A..S cells (row itself stays so other formulas don't shift). */
+/** Clear a row's A..T cells (row itself stays so other formulas don't shift). */
 export const clearTradeRow = async (spreadsheetId, subsheetName, rowIndex, accessToken) => {
   const encoded = encodeURIComponent(subsheetName);
-  const range = `${encoded}!A${rowIndex}:S${rowIndex}`;
+  const range = `${encoded}!A${rowIndex}:T${rowIndex}`;
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:clear`;
   const response = await fetch(url, {
     method: 'POST',
@@ -301,7 +302,7 @@ export const fetchSpreadsheetTabNames = async (spreadsheetId, accessToken) => {
   return data.sheets.map((sheet) => sheet.properties.title);
 };
 
-// -------- legacy names kept as thin aliases so existing imports don't break --
+
 export const appendFormulaRowToGoogle = appendTradeRow;
 export const updateRowInGoogle = async (
   spreadsheetId,

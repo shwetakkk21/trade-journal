@@ -53,9 +53,15 @@ export const planTrade = (portfolio, request) => {
     qty,
     price,
     date,
+    strategy,
     spreadsheetId,
     subsheetName,
   } = request;
+
+  // Normalise once: blank/undefined strategy becomes the same 'Unassigned'
+  // fallback rowBuilder/sheetService already use elsewhere, so a fresh BUY
+  // always lands with an explicit tag instead of an empty cell.
+  const cleanStrategy = (strategy || '').toString().trim() || 'Unassigned';
 
   const txSummary = {
     type,
@@ -80,6 +86,7 @@ export const planTrade = (portfolio, request) => {
           qty,
           sellDate: '',
           sellPrice: '',
+          strategy: cleanStrategy,
           txTag: 'BUY',
           txLink: '',
         },
@@ -130,6 +137,9 @@ export const planTrade = (portfolio, request) => {
           qty: lot.qty,
           sellDate: date,
           sellPrice: price,
+          // Selling doesn't change what strategy the closed lot belongs to —
+          // keep whatever it was already tagged with at buy time.
+          strategy: lot.strategy || cleanStrategy,
           txTag: 'SELL',
           txLink: '',
         },
@@ -155,6 +165,7 @@ export const planTrade = (portfolio, request) => {
           qty: soldSlice,
           sellDate: date,
           sellPrice: price,
+          strategy: lot.strategy || cleanStrategy,
           txTag: 'SELL',
           txLink: lot.sheetRowIndex,
         },
@@ -173,6 +184,7 @@ export const planTrade = (portfolio, request) => {
           qty: remainingOpen,
           sellDate: '',
           sellPrice: '',
+          strategy: lot.strategy || cleanStrategy,
           txTag: 'ADJ',
           txLink: '',
         },
@@ -282,6 +294,7 @@ export const planRevert = (tx, portfolio) => {
             qty: tx.qty,
             sellDate: '',
             sellPrice: '',
+            strategy: tx.strategy,
             txTag: tx.buyDate === today ? 'BUY' : 'ADJ',
             txLink: '',
           },
@@ -316,6 +329,7 @@ export const planRevert = (tx, portfolio) => {
         qty: Number(sibling.qty) + Number(tx.qty),
         sellDate: '',
         sellPrice: '',
+        strategy: sibling.strategy,
         txTag: sibling.buyDate === today ? 'BUY' : 'ADJ',
         txLink: '',
       },

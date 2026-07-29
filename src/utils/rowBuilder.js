@@ -1,5 +1,5 @@
 /**
- * Single source of truth for the Dhan-format row layout.
+ * 
  *
  *  A  S.No.           - number (or =ROW()-2)
  *  B  Symbol          - =CONCAT("NSE:",C{r})
@@ -43,6 +43,17 @@
  *                        parseSheetDate() only reads the date prefix, so
  *                        this stays backward compatible with any date-only
  *                        value in older rows.
+ *  T  Strategy         - free-text tag ("Momentum", "Swing", etc.), set from
+ *                         the Manual Execution modal. Defaults to
+ *                         "Unassigned" when the caller doesn't supply one so
+ *                         the column is never left blank on a fresh write.
+ *                         Only ever *assigned* on a BUY (the modal hides the
+ *                         field for SELL, and tradeEngine.js always forwards
+ *                         the original lot's strategy on SELL/ADJ instead of
+ *                         letting the caller set a new one) - but once set,
+ *                         it is written through unchanged on every row for
+ *                         that lot, including its SELL and any ADJ remainder,
+ *                         so selling never erases or changes it.
  */
 
 
@@ -69,9 +80,7 @@ export const buildTradeRowValues = (rowIndex, payload) => {
   const buyDt = toDateStr(payload.buyDate || payload.tradeDate);
   const sellDt = toDateStr(payload.sellDate || (isClosed ? payload.tradeDate : ''));
 
-  // Bookkeeping tag — defaults kept only for safety; every caller in this
-  // codebase (tradeEngine.planTrade / planRevert) now passes txTag
-  // explicitly so a row's ledger visibility is never guessed.
+  
   const txTag = payload.txTag || (isClosed ? 'SELL' : 'BUY');
   const txLink =
     payload.txLink !== undefined && payload.txLink !== null && payload.txLink !== ''
@@ -98,10 +107,9 @@ export const buildTradeRowValues = (rowIndex, payload) => {
     isClosed ? '' : `=J${r}*E${r}`,
     isClosed ? '' : `=P${r}-K${r}`,
     `=IFERROR(O${r}/K${r})`,
-    // Column S — hidden bookkeeping stamp "date|tag|link". Always
-    // overwritten whenever the row is written or updated, so the
-    // "Today's Transactions" ledger can filter/classify directly off the
-    // sheet (no localStorage, survives reloads).
+    
     bookkeeping,
+    
+    (payload.strategy && payload.strategy.toString().trim()) || 'Unassigned',
   ];
 };
