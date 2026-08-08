@@ -149,7 +149,7 @@ export function ManualTradeModal({
                 <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Strategy</label>
                 <input
                   type="text"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500 uppercase"
                   placeholder='ATH'
                   value={strategy}
                   onChange={(e) => setStrategy(e.target.value)}
