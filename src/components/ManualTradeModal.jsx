@@ -17,7 +17,7 @@ export function ManualTradeModal({
   const [tradeType, setTradeType] = useState('BUY');
   const [symbol, setSymbol] = useState('');
   const [demat, setDemat] = useState(validAccounts[0] || '');
-  const [strategy, setStrategy] = useState('Unassigned');
+  const [strategy, setStrategy] = useState('');
   const [qty, setQty] = useState('');
   const [price, setPrice] = useState('');
   const [customDate, setCustomDate] = useState(getTodayString());
@@ -28,7 +28,7 @@ export function ManualTradeModal({
       setTradeType(editTx.type);
       setSymbol(editTx.symbol);
       setDemat(editTx.demat);
-      setStrategy(editTx.strategy || 'Unassigned');
+      setStrategy(editTx.strategy||'');
       setQty(String(editTx.qty));
       setPrice(String(editTx.price));
       setCustomDate(editTx.date || getTodayString());
@@ -36,7 +36,7 @@ export function ManualTradeModal({
       setTradeType('BUY');
       setSymbol('');
       setDemat(validAccounts[0] || '');
-      setStrategy('Unassigned');
+      setStrategy('');
       setQty('');
       setPrice('');
       setCustomDate(getTodayString());
@@ -150,6 +150,7 @@ export function ManualTradeModal({
                 <input
                   type="text"
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500"
+                  placeholder='ATH'
                   value={strategy}
                   onChange={(e) => setStrategy(e.target.value)}
                 />

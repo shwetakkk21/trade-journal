@@ -175,8 +175,8 @@ export const fetchAndSanitizeSheet = async (
       unrealizedPL,
       strategy:
         idxStrategy !== -1 && row[idxStrategy]
-          ? row[idxStrategy].trim()
-          : 'Unassigned',
+          ? row[idxStrategy].trim().toUpperCase()
+          : 'UNASSIGNED',
       tradeDate: fallbackDateStr,
       lastModified,
       txTag,

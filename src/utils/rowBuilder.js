@@ -110,6 +110,6 @@ export const buildTradeRowValues = (rowIndex, payload) => {
     
     bookkeeping,
     
-    (payload.strategy && payload.strategy.toString().trim()) || 'Unassigned',
+    (payload.strategy && payload.strategy.toString().trim().toUpperCase()) || 'Unassigned',
   ];
 };
