@@ -45,7 +45,7 @@
  *                        value in older rows.
  *  T  Strategy         - free-text tag ("Momentum", "Swing", etc.), set from
  *                         the Manual Execution modal. Defaults to
- *                         "Unassigned" when the caller doesn't supply one so
+ *                         "UNASSIGNED" when the caller doesn't supply one so
  *                         the column is never left blank on a fresh write.
  *                         Only ever *assigned* on a BUY (the modal hides the
  *                         field for SELL, and tradeEngine.js always forwards
@@ -110,6 +110,6 @@ export const buildTradeRowValues = (rowIndex, payload) => {
     
     bookkeeping,
     
-    (payload.strategy && payload.strategy.toString().trim().toUpperCase()) || 'Unassigned',
+    (payload.strategy && payload.strategy.toString().trim().toUpperCase()) || 'UNASSIGNED',
   ];
 };

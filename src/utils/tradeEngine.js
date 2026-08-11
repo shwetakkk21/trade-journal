@@ -58,10 +58,10 @@ export const planTrade = (portfolio, request) => {
     subsheetName,
   } = request;
 
-  // Normalise once: blank/undefined strategy becomes the same 'Unassigned'
-  // fallback rowBuilder/sheetService already use elsewhere, so a fresh BUY
-  // always lands with an explicit tag instead of an empty cell.
-  const cleanStrategy = (strategy || '').toString().trim() || 'Unassigned';
+  // Normalise once: strategy is always stored uppercase (matches how
+  // sheetService reads it back), and blank/undefined becomes 'UNASSIGNED'
+  // so the column is never left ambiguous on a fresh write.
+  const cleanStrategy = ((strategy || '').toString().trim() || 'UNASSIGNED').toUpperCase();
 
   const txSummary = {
     type,

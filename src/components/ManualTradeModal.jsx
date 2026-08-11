@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getTodayString } from '../utils/dateUtils';
 import { availableQty } from '../utils/tradeEngine';
 
@@ -14,10 +14,20 @@ export function ManualTradeModal({
 
   const validAccounts = (dematOptions || []).filter((d) => d !== 'ALL');
 
+  const strategyOptions = Array.from(
+    new Set(
+      (portfolio || [])
+        .map((p) => (p.strategy || '').toString().trim())
+        .filter((s) => s && s.toUpperCase() !== 'UNASSIGNED')
+    )
+  ).sort((a, b) => a.localeCompare(b));
+
   const [tradeType, setTradeType] = useState('BUY');
   const [symbol, setSymbol] = useState('');
   const [demat, setDemat] = useState(validAccounts[0] || '');
   const [strategy, setStrategy] = useState('');
+  const [showStrategyOptions, setShowStrategyOptions] = useState(false);
+  const strategyFieldRef = useRef(null);
   const [qty, setQty] = useState('');
   const [price, setPrice] = useState('');
   const [customDate, setCustomDate] = useState(getTodayString());
@@ -28,7 +38,7 @@ export function ManualTradeModal({
       setTradeType(editTx.type);
       setSymbol(editTx.symbol);
       setDemat(editTx.demat);
-      setStrategy(editTx.strategy||'');
+      setStrategy((editTx.strategy || '').toUpperCase());
       setQty(String(editTx.qty));
       setPrice(String(editTx.price));
       setCustomDate(editTx.date || getTodayString());
@@ -44,17 +54,23 @@ export function ManualTradeModal({
     setInlineError('');
   }, [editTx, isOpen]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (strategyFieldRef.current && !strategyFieldRef.current.contains(e.target)) {
+        setShowStrategyOptions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const cleanSymbol = symbol.toUpperCase().trim();
   const parsedQty = parseFloat(qty) || 0;
   const rawOpenQty =
     tradeType === 'SELL' && cleanSymbol && demat
       ? availableQty(portfolio || [], cleanSymbol, demat)
       : null;
-  // When editing an existing SELL, its own quantity is currently "closed"
-  // (not counted as available) — but committing the edit reverts the
-  // original sell first, so that quantity becomes sellable again. Without
-  // this, editing just the price/date of an existing sell (leaving qty
-  // unchanged) would be incorrectly blocked as "not enough shares available".
+  
   const isEditingSameSell = !!editTx && editTx.type === 'SELL';
   const openQty =
     rawOpenQty === null
@@ -145,15 +161,53 @@ export function ManualTradeModal({
               </select>
             </div>
             {tradeType === 'BUY' && (
-              <div>
+              <div className="relative" ref={strategyFieldRef}>
                 <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Strategy</label>
                 <input
                   type="text"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500 uppercase"
-                  placeholder='ATH'
+                  disabled={!!editTx}
+                  placeholder="Select or type new"
+                  autoComplete="off"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-500 disabled:opacity-50"
                   value={strategy}
-                  onChange={(e) => setStrategy(e.target.value)}
+                  onFocus={() => setShowStrategyOptions(true)}
+                  onChange={(e) => {
+                    setStrategy(e.target.value.toUpperCase());
+                    setShowStrategyOptions(true);
+                  }}
                 />
+                {showStrategyOptions && !editTx && (() => {
+                  const query = strategy.trim().toLowerCase();
+                  const matches = query
+                    ? strategyOptions.filter((s) => s.toLowerCase().includes(query))
+                    : strategyOptions;
+                  const isNew = query && !strategyOptions.some((s) => s.toLowerCase() === query);
+
+                  if (matches.length === 0 && !isNew) return null;
+
+                  return (
+                    <div className="absolute z-20 mt-1 w-full bg-slate-900 border border-slate-800 rounded-lg shadow-xl max-h-40 overflow-y-auto">
+                      {matches.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => {
+                            setStrategy(s);
+                            setShowStrategyOptions(false);
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800 hover:text-teal-300 transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                      {isNew && (
+                        <div className="px-3 py-1.5 text-xs text-slate-500 border-t border-slate-800/80">
+                          New: <span className="text-emerald-400 font-medium">{strategy.trim()}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
